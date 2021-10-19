@@ -2,6 +2,7 @@ use serde::{Deserialize};
 use std::fs::File;
 use std::io::prelude::*;
 use colored::*;
+use std::process::Command;
 
 #[derive(Debug, Deserialize)]
 enum EntryType {
@@ -94,11 +95,47 @@ fn utf_from_bytes(buffer: &[u8]) -> String {
     };
 }
 
-fn main() {
-    let mut file = File::open("index2.json").expect("failed to open file");
+fn load_file(file_path: &str) -> String {
+    let mut file = File::open(file_path).expect("failed to open file");
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer).expect("failed to read file");
-    let index_json_string = utf_from_bytes(&buffer);
+    utf_from_bytes(&buffer)
+}
+
+#[derive(Debug, Deserialize)]
+struct TestConfiguration
+{
+    path_to_unrealengine: String,
+    path_to_project: String,
+    path_to_reports: String,
+}
+
+fn main() {
+    let config_toml = load_file("testconfig.toml");
+    let config : TestConfiguration = toml::from_str(config_toml.as_str()).expect("failed to parse toml");
+
+    println!("starting process");
+    let mut run_test_command = Command::new(config.path_to_unrealengine)
+        .args([
+            config.path_to_project.as_str(),
+            "-ExecCmds=Automation RunTests Project.",
+            "-unattended",
+            "-nopause",
+            "-testexit=Automation Test Queue Empty",
+            "-game",
+            "-log=runtests.log",
+            "-NullRHI",
+            format!("-ReportOutputPath={}", config.path_to_reports).as_str(),
+        ])
+        .spawn()
+        .expect("failed to start test process");
+    println!("process started, waiting for process to finish");
+
+    let test_exit_code = run_test_command.wait().expect("failed to wait for process");
+    assert!(test_exit_code.success());
+    println!("done waiting for process");
+
+    let index_json_string = load_file(format!("{}\\index.json", config.path_to_reports).as_str());
     let index_json = index_json_string.as_str();
     let mut test_pass : TestPass = serde_json::from_str(index_json).expect("invalid json");
     test_pass.tests.sort_by(|a, b| a.full_test_path.cmp(&b.full_test_path));
@@ -114,7 +151,6 @@ fn main() {
 
     for test in test_pass.tests {
         match test.state {
-            
             TestResult::Success => println!("{}{}", pass_message, test.full_test_path.white()),
             TestResult::Fail => 
             {
@@ -144,8 +180,7 @@ fn main() {
     else if test_pass.not_run > 0 || test_pass.succeeded_with_warnings > 0 {
         println!("{}", format!("{} passed, {} failed, {} other", test_pass.succeeded, test_pass.failed, test_pass.not_run + test_pass.succeeded_with_warnings).yellow());
     }
-    else
-    {
+    else {
         println!("{}", format!("{} passed, {} failed, {} other", test_pass.succeeded, test_pass.failed, test_pass.not_run + test_pass.succeeded_with_warnings).bright_green());
     }
     println!("{}s elapsed", test_pass.total_duration);
