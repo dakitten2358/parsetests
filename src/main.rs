@@ -14,7 +14,8 @@ enum EntryType {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Event {
-    r#type: EntryType,
+    #[serde(rename="type")]
+    entry_type: EntryType,
     message: String,
     context: String,
     artifact: String,
@@ -156,7 +157,7 @@ fn main() {
             {
                 println!("{}{}", fail_message, test.full_test_path.white());
                 for entry in test.entries {
-                    match entry.event.r#type {
+                    match entry.event.entry_type {
                         EntryType::Info => println!("{}{}{}", empty_spacer, log_info, entry.event.message),
                         EntryType::Warning => {
                             println!("{}{}{}", empty_spacer, log_warn, entry.event.message);
