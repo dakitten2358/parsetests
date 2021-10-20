@@ -88,8 +88,8 @@ struct TestPass {
 }
 
 fn utf_from_bytes(buffer: &[u8]) -> String {
-    let index_json_string = String::from_utf8_lossy(&buffer).into_owned();
-    return if index_json_string.starts_with("\u{feff}") {
+    let index_json_string = String::from_utf8_lossy(buffer).into_owned();
+    return if index_json_string.starts_with('\u{feff}') {
         String::from_utf8_lossy(&buffer[3..]).into_owned()
     } else {
         index_json_string
