@@ -153,8 +153,7 @@ fn main() {
     for test in test_pass.tests {
         match test.state {
             TestResult::Success => println!("{}{}", pass_message, test.full_test_path.white()),
-            TestResult::Fail => 
-            {
+            TestResult::Fail => {
                 println!("{}{}", fail_message, test.full_test_path.white());
                 for entry in test.entries {
                     match entry.event.entry_type {
@@ -175,14 +174,18 @@ fn main() {
         
     }
 
+    let succeeded_count = test_pass.succeeded;
+    let failed_count = test_pass.failed;
+    let other_count = test_pass.not_run + test_pass.succeeded_with_warnings;
+
     if test_pass.failed > 0 {
-        println!("{}", format!("{} passed, {} failed, {} other", test_pass.succeeded, test_pass.failed, test_pass.not_run + test_pass.succeeded_with_warnings).red());
+        println!("{}", format!("{} passed, {} failed, {} other", succeeded_count, failed_count, other_count).red());
     }
     else if test_pass.not_run > 0 || test_pass.succeeded_with_warnings > 0 {
-        println!("{}", format!("{} passed, {} failed, {} other", test_pass.succeeded, test_pass.failed, test_pass.not_run + test_pass.succeeded_with_warnings).yellow());
+        println!("{}", format!("{} passed, {} failed, {} other", succeeded_count, failed_count, other_count).yellow());
     }
     else {
-        println!("{}", format!("{} passed, {} failed, {} other", test_pass.succeeded, test_pass.failed, test_pass.not_run + test_pass.succeeded_with_warnings).bright_green());
+        println!("{}", format!("{} passed, {} failed, {} other", succeeded_count, failed_count, other_count).bright_green());
     }
     println!("{}s elapsed", test_pass.total_duration);
 }
