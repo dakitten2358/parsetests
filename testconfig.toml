@@ -1,3 +1,3 @@
-path_to_unrealengine="C:/Games/UE_5.0EA/Engine/Binaries/Win64/UnrealEditor.exe"
-path_to_project="C:/Users/jason-william.murray/Documents/Unreal Projects/CreateWorldInTests/CreateWorldInTests.uproject"
-path_to_reports="E:/TestReports"
+path_to_unrealengine="F:/UnrealEngine/Engine/Binaries/Win64/UnrealEditor.exe"
+path_to_project="F:/CastleAdventure/CastleAdventure.uproject"
+path_to_reports="F:/CastleAdventure/Saved/Reports"

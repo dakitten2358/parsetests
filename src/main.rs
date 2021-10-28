@@ -132,7 +132,7 @@ fn main() {
     println!("process started, waiting for process to finish");
 
     let test_exit_code = run_test_command.wait().expect("failed to wait for process");
-    assert!(test_exit_code.success());
+    //assert!(test_exit_code.success());
     println!("done waiting for process");
 
     let index_json_string = load_file(format!("{}\\index.json", config.path_to_reports).as_str());
