@@ -151,7 +151,22 @@ fn main() {
 
     for test in test_pass.tests {
         match test.state {
-            TestResult::Success => println!("{}{}", pass_message, test.full_test_path.white()),
+            TestResult::Success => {
+                println!("{}{}", pass_message, test.full_test_path.white());
+                for entry in test.entries {
+                    match entry.event.entry_type {
+                        EntryType::Warning => {
+                            println!("{}{}{}", empty_spacer, log_warn, entry.event.message);
+                            println!("{}{}{}:{}", empty_spacer, empty_spacer, entry.filename, entry.line_number);
+                        }
+                        EntryType::Error => {
+                            println!("{}{}{}", empty_spacer, log_error, entry.event.message);
+                            println!("{}{}{}:{}", empty_spacer, empty_spacer, entry.filename, entry.line_number);
+                        },
+                        _ => {}
+                    }
+                }
+            },
             TestResult::Fail => {
                 println!("{}{}", fail_message, test.full_test_path.white());
                 for entry in test.entries {
