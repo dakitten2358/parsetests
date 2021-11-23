@@ -131,7 +131,11 @@ fn main() {
         .expect("failed to start test process");
     println!("process started, waiting for process to finish");
 
-    let _test_exit_code = run_test_command.wait().expect("failed to wait for process");
+    let test_exit_code = run_test_command.wait().expect("failed to wait for process");
+    if !test_exit_code.success() {
+        println!("{}", "failed to run tests".red());
+        return;
+    }
     //assert!(test_exit_code.success());
     println!("done waiting for process");
 
