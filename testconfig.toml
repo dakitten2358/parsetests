@@ -1,3 +1,4 @@
 path_to_unrealengine="F:/UnrealEngine/Engine/Binaries/Win64/UnrealEditor.exe"
 path_to_project="F:/CastleAdventure/CastleAdventure.uproject"
 path_to_reports="F:/CastleAdventure/Saved/Reports"
+run_tests="Project."

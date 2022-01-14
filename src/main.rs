@@ -108,17 +108,25 @@ struct TestConfiguration {
     path_to_unrealengine: String,
     path_to_project: String,
     path_to_reports: String,
+    run_tests: String,
 }
 
 fn main() {
     let config_toml = load_file("testconfig.toml");
     let config: TestConfiguration = toml::from_str(config_toml.as_str()).expect("failed to parse toml");
+    let mut run_tests = config.run_tests.to_owned();
 
-    println!("starting process");
+    let mut args: Vec<String> = std::env::args().collect();
+    if args.len() > 1 {
+        args.remove(0);
+        run_tests = args.join(" ").to_owned();
+    }
+
+    println!("running tests: {}", run_tests);
     let mut run_test_command = Command::new(config.path_to_unrealengine)
         .args([
             config.path_to_project.as_str(),
-            "-ExecCmds=Automation RunTests Project.",
+            format!("-ExecCmds=Automation RunTests {}", run_tests).as_str(),
             "-unattended",
             "-nopause",
             "-testexit=Automation Test Queue Empty",
