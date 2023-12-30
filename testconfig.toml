@@ -1,5 +1,6 @@
-path_to_unrealengine="F:/UnrealEngine/Engine/Binaries/Win64/UnrealEditor.exe"
+path_to_unrealengine="C:/Program Files/Epic Games/UE_5.3/Engine/Binaries/Win64/UnrealEditor.exe"
 path_to_project="F:/CastleAdventure/CastleAdventure.uproject"
 path_to_reports="F:/CastleAdventure/Saved/Reports"
 run_tests="Project."
 test_exit="Successfully wrote json results file"
+ignore_regexes = ["Asset has been saved with empty engine version"]
