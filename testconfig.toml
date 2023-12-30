@@ -3,4 +3,4 @@ path_to_project="F:/CastleAdventure/CastleAdventure.uproject"
 path_to_reports="F:/CastleAdventure/Saved/Reports"
 run_tests="Project."
 test_exit="Successfully wrote json results file"
-ignore_regexes = ["Asset has been saved with empty engine version"]
+ignore_regexes = ["LogUIActionRouter:", "LogViewport:"]
