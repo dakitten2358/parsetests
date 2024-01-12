@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::process::Command;
 use regex;
+use clap_v3::{App, Arg};
 
 #[derive(Debug, Deserialize)]
 enum EntryType {
@@ -115,14 +116,30 @@ struct TestConfiguration {
 }
 
 fn main() {
-    let config_toml = load_file("testconfig.toml");
+    let matches = App::new("runtests")
+        .arg(Arg::with_name("tests")
+            .help("Sets the tests to run")
+            .required(false)
+            .multiple(true))
+        .arg(Arg::new("config")
+            .short('c')
+            .long("config")
+            .value_name("FILE")
+            .default_value("testconfig.toml")
+            .help("Sets a custom config file")
+            .takes_value(true))
+        .get_matches();
+
+    let config_file_path = matches.value_of("config").expect("failed to get config file");
+
+    let config_toml = load_file(config_file_path);
     let config: TestConfiguration = toml::from_str(config_toml.as_str()).expect("failed to parse toml");
     let mut run_tests = config.run_tests.to_owned();
 
-    let mut args: Vec<String> = std::env::args().collect();
-    if args.len() > 1 {
-        args.remove(0);
-        run_tests = args.join(" ").to_owned();
+    if let Some(tests) = matches.values_of("tests") {
+        if tests.len() > 0 {
+            run_tests = tests.into_iter().collect::<Vec<&str>>().join(" ");
+        }
     }
 
     println!("running tests: {}", run_tests);
