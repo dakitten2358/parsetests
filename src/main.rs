@@ -109,6 +109,7 @@ struct TestConfiguration {
     path_to_project: String,
     path_to_reports: String,
     run_tests: String,
+    test_exit: String,
 }
 
 fn main() {
@@ -129,7 +130,7 @@ fn main() {
             format!("-ExecCmds=Automation RunTests {}", run_tests).as_str(),
             "-unattended",
             "-nopause",
-            "-testexit=Automation Test Queue Empty",
+            format!("-testexit={}", config.test_exit).as_str(),
             "-game",
             "-log=runtests.log",
             "-NullRHI",
