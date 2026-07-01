@@ -3,6 +3,8 @@ use serde::Deserialize;
 use std::fs::File;
 use std::io::prelude::*;
 use std::process::Command;
+use regex;
+use clap_v3::{App, Arg};
 
 #[derive(Debug, Deserialize)]
 enum EntryType {
@@ -110,17 +112,34 @@ struct TestConfiguration {
     path_to_reports: String,
     run_tests: String,
     test_exit: String,
+    ignore_regexes: Vec<String>,
 }
 
 fn main() {
-    let config_toml = load_file("testconfig.toml");
+    let matches = App::new("runtests")
+        .arg(Arg::with_name("tests")
+            .help("Sets the tests to run")
+            .required(false)
+            .multiple(true))
+        .arg(Arg::new("config")
+            .short('c')
+            .long("config")
+            .value_name("FILE")
+            .default_value("testconfig.toml")
+            .help("Sets a custom config file")
+            .takes_value(true))
+        .get_matches();
+
+    let config_file_path = matches.value_of("config").expect("failed to get config file");
+
+    let config_toml = load_file(config_file_path);
     let config: TestConfiguration = toml::from_str(config_toml.as_str()).expect("failed to parse toml");
     let mut run_tests = config.run_tests.to_owned();
 
-    let mut args: Vec<String> = std::env::args().collect();
-    if args.len() > 1 {
-        args.remove(0);
-        run_tests = args.join(" ").to_owned();
+    if let Some(tests) = matches.values_of("tests") {
+        if tests.len() > 0 {
+            run_tests = tests.into_iter().collect::<Vec<&str>>().join(" ");
+        }
     }
 
     println!("running tests: {}", run_tests);
@@ -142,10 +161,15 @@ fn main() {
 
     let test_exit_code = run_test_command.wait().expect("failed to wait for process");
     if !test_exit_code.success() {
-        println!("{}", "failed to run tests".red());
+        match test_exit_code.code() {
+            Some(code) => println!("{}{}", "exited with status code: ".red(), code),
+            None => {
+                println!("{}", "process terminated by signal".red());
+                return;
+            }
+        }
         return;
     }
-    //assert!(test_exit_code.success());
     println!("done waiting for process");
 
     let index_json_string = load_file(format!("{}\\index.json", config.path_to_reports).as_str());
@@ -167,6 +191,11 @@ fn main() {
             TestResult::Success => {
                 println!("{}{}", pass_message, test.full_test_path.white());
                 for entry in test.entries {
+
+                    if should_ignore_message(entry.event.message.as_str(), &config.ignore_regexes) {
+                        continue;
+                    }
+
                     match entry.event.entry_type {
                         EntryType::Warning => {
                             println!("{}{}{}", empty_spacer, log_warn, entry.event.message);
@@ -183,6 +212,11 @@ fn main() {
             TestResult::Fail => {
                 println!("{}{}", fail_message, test.full_test_path.white());
                 for entry in test.entries {
+
+                    if should_ignore_message(entry.event.message.as_str(), &config.ignore_regexes) {
+                        continue;
+                    }
+
                     match entry.event.entry_type {
                         EntryType::Info => println!("{}{}{}", empty_spacer, log_info, entry.event.message),
                         EntryType::Warning => {
@@ -212,4 +246,14 @@ fn main() {
         println!("{}", format!("{} passed, {} failed, {} other", succeeded_count, failed_count, other_count).bright_green());
     }
     println!("{}s elapsed", test_pass.total_duration);
+}
+
+fn should_ignore_message(message: &str, ignore_regexes: &Vec<String>) -> bool {
+    for ignore_regex in ignore_regexes.iter() {
+        let re = regex::Regex::new(ignore_regex).unwrap();
+        if re.is_match(message) {
+            return true;
+        }
+    }
+    return false;
 }
